@@ -1,0 +1,20 @@
+# Build folder and log file
+build/
+build.log
+bin/
+.DS_STORE
+
+# iOS
+*.xcuserdatad/
+xcshareddata/
+iphone/*.zip
+iphone/modules*
+iphone/metadata.json
+
+# Android Build Files
+android/dist/
+android/libs/
+android/assets/
+android/documentation/
+android/example/
+android/LICENSE

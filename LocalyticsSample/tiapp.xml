@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ti:app xmlns:ti="http://ti.appcelerator.org">
+    <id>com.localytics.sample</id>
+    <name>LocalyticsSample</name>
+    <version>1.0</version>
+    <publisher>Localytics</publisher>
+    <url>https://www.localytics.com</url>
+    <description/>
+    <copyright>2016 by Localytics</copyright>
+    <icon>appicon.png</icon>
+    <fullscreen>false</fullscreen>
+    <navbar-hidden>false</navbar-hidden>
+    <analytics>true</analytics>
+    <guid>ff2d7df1-0f2b-4c4c-9aaa-fda57ac40594</guid>
+    <property name="ti.ui.defaultunit" type="string">dp</property>
+    <ios>
+        <plist>
+            <dict>
+                <key>UISupportedInterfaceOrientations~iphone</key>
+                <array>
+                    <string>UIInterfaceOrientationPortrait</string>
+                </array>
+                <key>UISupportedInterfaceOrientations~ipad</key>
+                <array>
+                    <string>UIInterfaceOrientationPortrait</string>
+                    <string>UIInterfaceOrientationPortraitUpsideDown</string>
+                    <string>UIInterfaceOrientationLandscapeLeft</string>
+                    <string>UIInterfaceOrientationLandscapeRight</string>
+                </array>
+                <key>UIRequiresPersistentWiFi</key>
+                <false/>
+                <key>UIPrerenderedIcon</key>
+                <false/>
+                <key>UIStatusBarHidden</key>
+                <false/>
+                <key>UIStatusBarStyle</key>
+                <string>UIStatusBarStyleDefault</string>
+                <key>LocalyticsAppKey</key>
+                <string>Localytics App Key</string>
+                <key>UIBackgroundModes</key>
+                <array>
+                    <string>remote-notification</string>
+                    <string>fetch</string>
+                </array>
+            </dict>
+        </plist>
+    </ios>
+    <property name="com.localytics.android_push_sender_id">Google Project Number</property>
+    <android xmlns:android="http://schemas.android.com/apk/res/android">
+        <manifest>
+            <uses-permission android:name="android.permission.INTERNET"/>
+            <uses-permission android:name="android.permission.WAKE_LOCK"/>
+            <uses-permission android:name="android.permission.GET_ACCOUNTS"/>
+            <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE"/>
+            <permission
+                android:name="com.localytics.sample.permission.C2D_MESSAGE" android:protectionLevel="signature"/>
+            <uses-permission android:name="com.localytics.sample.permission.C2D_MESSAGE"/>
+            <application>
+                <meta-data android:name="LOCALYTICS_APP_KEY" android:value="Localytics App Key"/>
+                <service android:name="com.localytics.gcm.GCMIntentService"/>
+                <receiver
+                    android:name="com.localytics.gcm.GCMBroadcastReceiver" android:permission="com.google.android.c2dm.permission.SEND">
+                    <intent-filter>
+                        <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                        <category android:name="android.intent.category.HOME"/>
+                    </intent-filter>
+                    <intent-filter>
+                        <action android:name="com.google.android.c2dm.intent.RECEIVE"/>
+                        <category android:name="com.localytics.sample"/>
+                    </intent-filter>
+                    <intent-filter>
+                        <action android:name="com.google.android.c2dm.intent.REGISTRATION"/>
+                        <category android:name="com.localytics.sample"/>
+                    </intent-filter>
+                </receiver>
+                <receiver android:exported="true" android:name="com.localytics.android.ReferralReceiver">
+                    <intent-filter>
+                        <action android:name="com.android.vending.INSTALL_REFERRER"/>
+                    </intent-filter>
+                </receiver>
+            </application>
+        </manifest>
+    </android>
+    <mobileweb>
+        <precache/>
+        <splash>
+            <enabled>true</enabled>
+            <inline-css-images>true</inline-css-images>
+        </splash>
+        <theme>default</theme>
+    </mobileweb>
+    <modules>
+        <module platform="commonjs">ti.cloud</module>
+        <module platform="android">ti.map</module>
+        <module platform="iphone" version="3.7.0">com.localytics</module>
+        <module platform="android" version="3.7.0">com.localytics</module>
+    </modules>
+    <deployment-targets>
+        <target device="android">true</target>
+        <target device="ipad">true</target>
+        <target device="iphone">true</target>
+        <target device="mobileweb">false</target>
+        <target device="windows">false</target>
+    </deployment-targets>
+    <sdk-version>5.1.1.GA</sdk-version>
+    <plugins>
+        <plugin version="1.0">ti.alloy</plugin>
+    </plugins>
+    <property name="appc-app-id" type="string">56bfdaf42490b77c4c45e82a</property>
+    <property name="acs-authbase-url-development" type="string">https://secure-identity.cloud.appcelerator.com</property>
+    <property name="acs-base-url-development" type="string">https://api.cloud.appcelerator.com</property>
+    <property name="acs-oauth-secret-development" type="string">2vgUIwLoyabya6ztA0NLtOmfZHZQxqh1</property>
+    <property name="acs-oauth-key-development" type="string">rpyk5HEKoFJkCVtOUokcbB6iq81ZCZtr</property>
+    <property name="acs-api-key-development" type="string">ZxhL7pzEQrwg65GUXIsDArRPV3pBqzKS</property>
+    <property name="acs-username-development" type="string">appc_app_user_dev</property>
+    <property name="acs-password-development" type="string">vxE5WPin0hEBpAlgbs</property>
+    <property name="acs-authbase-url-production" type="string">https://secure-identity.cloud.appcelerator.com</property>
+    <property name="acs-base-url-production" type="string">https://api.cloud.appcelerator.com</property>
+    <property name="acs-oauth-secret-production" type="string">PbDlyPd0CMC8NKwKyXMVLIZsgWZK1h9C</property>
+    <property name="acs-oauth-key-production" type="string">mYQFNGLvsUQIzEc24gq66xciU2wulHzl</property>
+    <property name="acs-api-key-production" type="string">T7s1H7Bc5JgSrdWUj6Yn3hBxd35ZH2oL</property>
+    <property name="acs-username-production" type="string">appc_app_user</property>
+    <property name="acs-password-production" type="string">CtT2ElbgRX7Tijuowx</property>
+    <property name="appc-org-id" type="string">100088588</property>
+    <property name="appc-creator-user-id" type="string">071ddf21-7003-4875-8818-1d87b021e725</property>
+</ti:app>
