@@ -13,7 +13,7 @@ localytics.registerPush();
 localytics.setLoggingEnabled(true);
 localytics.setSessionTimeoutInterval(5);
 
-// set cumstom dimensions and identifiers 
+// set custom dimensions and identifiers 
 localytics.setCustomDimension(0, 'value_one'); // custom dimension number can be 0 - 9
 localytics.getCustomDimension(0);
 localytics.setCustomerId('apple@localytics.com');
