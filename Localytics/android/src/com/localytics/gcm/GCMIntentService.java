@@ -62,14 +62,21 @@ public class GCMIntentService extends GCMBaseIntentService {
         } catch (PackageManager.NameNotFoundException e) {
         	LocalyticsLog.w("Failed to get application name, icon, or launch intent");
         }
-
-        Notification notification = new Notification(appIcon, message, System.currentTimeMillis());
-        notification.flags |= Notification.FLAG_AUTO_CANCEL;
         
         Intent launchIntent = new Intent(this, PushTrackingActivity.class);
         launchIntent.putExtras(intent);
     	PendingIntent contentIntent = PendingIntent.getActivity(context, 0, launchIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-        notification.setLatestEventInfo(context, appName, message, contentIntent);
+    	
+    	Notification.Builder builder = new Notification.Builder(context)
+        	.setSmallIcon(appIcon)
+        	.setTicker(message)
+        	.setWhen(System.currentTimeMillis())
+        	.setContentTitle(appName)
+        	.setContentText(message)
+        	.setContentIntent(contentIntent);
+    	
+    	final Notification notification = builder.build();
+    	notification.flags |= Notification.FLAG_AUTO_CANCEL;
 
         // Show the notification (use the campaign id as the notification id to prevents duplicates)
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);

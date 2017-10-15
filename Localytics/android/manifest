@@ -2,12 +2,12 @@
 # this is your module manifest and used by Titanium
 # during compilation, packaging, distribution, etc.
 #
-version: 3.7.0
-apiversion: 2
-architectures: armeabi armeabi-v7a x86
+version: 3.8.0
+apiversion: 3
+architectures: armeabi-v7a x86
 description: Localytics is a closed-loop app analytics and marketing platform that helps brands acquire, engage, and retain users.
 author: Localytics
-license:
+license: None
 Copyright (c) 2015, Char Software, Inc. d/b/a Localytics
 All rights reserved.
 
@@ -36,4 +36,4 @@ name: Localytics
 moduleid: com.localytics
 guid: e774230a-3345-4c23-8f61-98569209cfd8
 platform: android
-minsdk: 3.5.0.GA
+minsdk: 6.1.2.GA
