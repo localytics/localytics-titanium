@@ -11,7 +11,7 @@
 #import "TiUtils.h"
 #import "TiApp.h"
     
-#import "Localytics.h"
+#import <Localytics/Localytics.h>
 
 @implementation ComLocalyticsModule
 
@@ -85,43 +85,50 @@ MAKE_SYSTEM_PROP(DISMISS_BUTTON_LOCATION_RIGHT, 1);*/
  *  ---------------------------------------------------------------------------------------
  */
 
-- (void)autoIntegrate:(id)arg{
-    NSUInteger count = [arg count];
-    NSString *appKey = nil;
+- (void)autoIntegrate:(NSArray<id> * _Nonnull)args
+{
+    ENSURE_ARG_COUNT(args, 2)
     
-    if (count == 0){
+    NSString *appKey = [args objectAtIndex: 0];
+    NSDictionary *options = [args objectAtIndex: 1];
+    
+    if (appKey == nil){
         appKey = [[NSBundle mainBundle]objectForInfoDictionaryKey:@"LocalyticsAppKey"];
-    } else {
-        ENSURE_SINGLE_ARG(arg, NSString);
-        appKey = arg;
     }
-    
-    if (appKey){
-        NSDictionary *launchOptions = [[TiApp app]launchOptions];
-        [Localytics autoIntegrate:appKey launchOptions:launchOptions];
+    if (appKey) {
+        NSDictionary *launchOptions = [[TiApp app] launchOptions];
+        [Localytics autoIntegrate:appKey withLocalyticsOptions:options launchOptions:launchOptions];
     }
 }
 
-- (void)integrate:(id)arg{
-    NSUInteger count = [arg count];
-    NSString *appKey = nil;
+- (void)integrate:(NSArray<id> * _Nonnull)args
+{
+    NSString *appKey = [args objectAtIndex: 0];
+    NSDictionary *options = [args objectAtIndex: 1];
     
-    if (count == 0){
+    if (appKey == nil){
         appKey = [[NSBundle mainBundle]objectForInfoDictionaryKey:@"LocalyticsAppKey"];
-    } else {
-        ENSURE_SINGLE_ARG(arg, NSString);
-        appKey = arg;
     }
-    
     if (appKey){
-        [Localytics integrate:appKey];
+        [Localytics integrate:appKey withLocalyticsOptions:options];
     }
 }
 
-- (void)openSession:(id)arg{ [Localytics openSession]; }
-- (void)closeSession:(id)arg{ [Localytics closeSession]; }
+- (void)openSession:(__unused id)unused
+{
+    [Localytics openSession];
+}
+- (void)closeSession:(__unused id)unused
+{
+    [Localytics closeSession];
+    
+}
 
-- (void)upload:(id)arg{ [Localytics upload]; }
+- (void)upload:(__unused id)unused
+{
+    [Localytics upload];
+    
+}
 
 #pragma mark - Event Tagging
 /** ---------------------------------------------------------------------------------------
@@ -387,7 +394,7 @@ MAKE_SYSTEM_PROP(DISMISS_BUTTON_LOCATION_RIGHT, 1);*/
     ENSURE_SINGLE_ARG(arg, NSDictionary)
     NSDictionary *notificationInfo = arg;
     
-    [Localytics handlePushNotificationOpened:notificationInfo];
+    //[Localytics handlePushNotificationOpened:notificationInfo];
 }
 
 #pragma mark - In-App Message
@@ -471,11 +478,10 @@ MAKE_SYSTEM_PROP(DISMISS_BUTTON_LOCATION_RIGHT, 1);*/
     [Localytics setTestModeEnabled:[TiUtils boolValue:arg]];
 }
 
-- (id)getSessionTimeoutInterval:(id)arg{
-    return NUMDOUBLE([Localytics sessionTimeoutInterval]);
-}
-- (void)setSessionTimeoutInterval:(id)arg{
-    [Localytics setSessionTimeoutInterval:[TiUtils intValue:arg]];
+- (void)setOptions:(id)arg{
+    ENSURE_ARG_COUNT(arg, 1)
+    ENSURE_TYPE(arg[0], NSDictionary)
+    [Localytics setOptions: (NSDictionary*) arg[0]];
 }
 
 - (id)getInstallId:(id)args{
