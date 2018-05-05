@@ -35,7 +35,7 @@
 @protocol LLLocationDelegate;
 
 @class UNMutableNotificationContent;
-#define LOCALYTICS_LIBRARY_VERSION      @"5.0.0" //iOS version
+#define LOCALYTICS_LIBRARY_VERSION      @"5.1.0" //iOS version
 
 #else
 
@@ -131,6 +131,16 @@
  @Version SDK3.0
  */
 + (void)upload;
+
+/**
+ Halt the uploading of Analytics and Profiles data to the Localytics servers.
+ Re-enabling the upload of data will cause an immediate upload.
+ 
+ @Version SDK5.1
+ @param pause if set to true, all data uploading will be halted.  If false, data uploading will resume as normal.
+ */
+
++ (void)pauseDataUploading:(BOOL)pause;
 
 #pragma mark - Event Tagging
 /** ---------------------------------------------------------------------------------------
@@ -398,13 +408,25 @@
  */
 + (nullable NSString *)valueForIdentifier:(nonnull NSString *)identifier;
 
-/** Set the identifier for the customer. This valued is used when setting profile attributes,
+/** Set the identifier for the customer. This value is used when setting profile attributes,
  targeting users for push and mapping data exported from Localytics to a user.
  @param customerId The value to set the customer identifier to
 
  @Version SDK3.0
  */
 + (void)setCustomerId:(nullable NSString *)customerId;
+
+/** Set the identifier for the customer. This value is used when setting profile attributes,
+ targeting users for push and mapping data exported from Localytics to a user.
+ Additionally this will set the appropriate data collection state for the the user.
+ @param customerId The value to set the customer identifier to
+ @param optedOut If the user has consented to data collection
+ @see setCustomerId:
+ @see setPrivacyOptedOut:
+ 
+ @Version SDK5.1
+ */
++ (void)setCustomerId:(nullable NSString *)customerId privacyOptedOut:(BOOL)optedOut;
 
 /** Gets the customer id. Avoid calling this on the main thread, as it
  may take some time for all pending database execution.
@@ -622,6 +644,29 @@
  @Version SDK3.0
  */
 + (void)setOptedOut:(BOOL)optedOut;
+
+/** Returns whether or not the application will collect user data.
+ @return YES if the user is opted out, NO otherwise. Default is NO
+ @see setPrivacyOptedOut:
+ 
+ @Version SDK5.1
+ */
++ (BOOL)isPrivacyOptedOut;
+
+/** Sets the Localytics opt-out state for this application. This call is not necessary and is provided for people who wish to
+ allow their users the ability to opt out of data collection. It can be called at any time. Passing true causes all further
+ data collection to stop, and a profile attribute will be set causing a deletion of data request to be made for Localytics
+ in line with the GDPR standard.
+ There are very serious implications to the quality of your data when providing an opt out option. For example, users who
+ have opted out will appear as never returning, causing your new/returning chart to skew. <br>
+ As a side effect of protecting a user's data, the SDK will internally ensure that ADID's are
+ no longer appended to the url's of In-App and Inbox call to action links.
+ @param optedOut YES if the user is opted out, NO otherwise.
+ @see isPrivacyOptedOut
+ 
+ @Version SDK5.1
+ */
++ (void)setPrivacyOptedOut:(BOOL)optedOut;
 
 /** Returns the install id
  @return the install id as an NSString
@@ -1011,6 +1056,7 @@
 /** Trigger a region with a certain event. This method should be used in conjunction with geofencesToMonitor:.
  @param region The CLRegion that is triggered
  @param event The triggering event (enter or exit)
+ @param location A CLLocation that will update the closest geofences for future triggers
  @see geofencesToMonitor:
 
  * @Version SDK5.0
@@ -1021,6 +1067,7 @@
  conjunction with geofencesToMonitor:.
  @param regions An array of CLRegion object that are triggered
  @param event The triggering event (enter or exit)
+ @param location A CLLocation that will update the closest geofences for future triggers
  @see geofencesToMonitor:
 
  * @Version SDK5.0
@@ -1104,6 +1151,9 @@
 + (void)setMessagingDelegate:(nullable id<LLMessagingDelegate>)delegate;
 
 /** Returns whether the ADID parameter is added to In-App call to action URLs
+ This call is not garaunteed to return the correct result as the call to setInAppAdidParameterEnabled
+ is run asynchronously, and this returns synchronously.
+ SDK v6.0 will contain a fix for this behavior, if this is a major blocker, please contact support.
  @return YES if parameter is added, NO otherwise
 
  * @Version SDK4.0
@@ -1119,6 +1169,9 @@
 + (void)setInAppAdIdParameterEnabled:(BOOL)enabled;
 
 /** Returns whether the ADID parameter is added to Inbox call to action URLs
+ This call is not garaunteed to return the correct result as the call to setInboxAdidParameterEnabled
+ is run asynchronously, and this returns synchronously.
+ SDK v6.0 will contain a fix for this behavior, if this is a major blocker, please contact support.
  @return YES if parameter is added, NO otherwise
 
  * @Version SDK5.0

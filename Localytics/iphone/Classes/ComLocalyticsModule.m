@@ -36,23 +36,6 @@ MAKE_SYSTEM_PROP(DISMISS_BUTTON_LOCATION_RIGHT, 1);*/
 
 #pragma mark Lifecycle
 
-- (void)startup
-{
-	// this method is called when the module is first loaded
-	// you *must* call the superclass
-	[super startup];
-}
-
-- (void)shutdown:(id)sender
-{
-	// this method is called when the module is being unloaded
-	// typically this is during shutdown. make sure you don't do too
-	// much processing here or the app will be quit forceably
-
-	// you *must* call the superclass
-	[super shutdown:sender];
-}
-
 - (void)applicationDidBecomeActive:(id)arg{}
 - (void)applicationWillResign:(id)arg{}
 
@@ -60,26 +43,65 @@ MAKE_SYSTEM_PROP(DISMISS_BUTTON_LOCATION_RIGHT, 1);*/
 
 - (void)dealloc
 {
-	// release any resources that have been retained by the module
-	[super dealloc];
-}
+  RELEASE_TO_NIL(_beaconLocationManager);
+  RELEASE_TO_NIL(_monitoringCallback);
+  RELEASE_TO_NIL(_beaconProximities);
 
-#pragma mark Internal Memory Management
-
-- (void)didReceiveMemoryWarning:(NSNotification*)notification
-{
-	// optionally release any resources that can be dynamically
-	// reloaded once memory is available - such as caches
-	[super didReceiveMemoryWarning:notification];
+  [super dealloc];
 }
 
 #pragma Public APIs
 
-- (id)plistAppKey:(id)arg{
+- (NSString *)plistAppKey:(id)arg
+{
     return [[NSBundle mainBundle]objectForInfoDictionaryKey:@"LocalyticsAppKey"];
 }
 
+#pragma mark - Beacons
+
+- (void)startMonitoring:(id)callback
+{
+  ENSURE_SINGLE_ARG(callback, KrollCallback);
+  RELEASE_TO_NIL(_monitoringCallback);
+  
+  NSString *ESTIMOTE_UUID = @"B9407F30-F5F8-466E-AFF9-25556B57FE6D";
+  NSString *ESTIMATE_IDENTIFIER = @"Estimote Beacons";
+  
+  if (_monitoringCallback != nil || _beaconLocationManager != nil) {
+    TiExceptionThrowWithNameAndReason(@"Beacon error", @"Attempted to start monitoring that already started", @"The location manager or monitoring callback have already been set. Call \"stopMonitoring()\" before attempting to start monitoring again", CODELOCATION);
+    return;
+  }
+
+  _monitoringCallback = [callback retain];
+  
+  _beaconLocationManager = [[CLLocationManager alloc] init];
+  _beaconProximities = [[NSMutableDictionary alloc] init];
+
+  [_beaconLocationManager setDelegate:self];
+  
+  CLBeaconRegion *beaconRegion = [[CLBeaconRegion alloc] initWithProximityUUID:[[NSUUID alloc] initWithUUIDString:ESTIMOTE_UUID]
+                                                                    identifier:ESTIMATE_IDENTIFIER];
+
+  [_beaconLocationManager startRangingBeaconsInRegion:beaconRegion];
+}
+
+
+- (void)stopMonitoring:(id)unused
+{
+  NSSet<CLRegion *> *rangedRegions = [_beaconLocationManager rangedRegions];
+  
+  for (CLRegion *region in rangedRegions) {
+    [_beaconLocationManager stopRangingBeaconsInRegion:(CLBeaconRegion *)region];
+  }
+
+  // Clean up
+  [_beaconLocationManager setDelegate:nil];
+  RELEASE_TO_NIL(_beaconLocationManager);
+  RELEASE_TO_NIL(_monitoringCallback);
+}
+
 #pragma mark - SDK Integration
+
 /** ---------------------------------------------------------------------------------------
  * @name Localytics SDK Integration
  *  ---------------------------------------------------------------------------------------
@@ -131,6 +153,7 @@ MAKE_SYSTEM_PROP(DISMISS_BUTTON_LOCATION_RIGHT, 1);*/
 }
 
 #pragma mark - Event Tagging
+
 /** ---------------------------------------------------------------------------------------
  * @name Event Tagging
  *  ---------------------------------------------------------------------------------------
@@ -169,6 +192,7 @@ MAKE_SYSTEM_PROP(DISMISS_BUTTON_LOCATION_RIGHT, 1);*/
 }
 
 #pragma mark - Custom Dimensions
+
 /** ---------------------------------------------------------------------------------------
  * @name Custom Dimensions
  *  ---------------------------------------------------------------------------------------
@@ -189,6 +213,7 @@ MAKE_SYSTEM_PROP(DISMISS_BUTTON_LOCATION_RIGHT, 1);*/
 }
 
 #pragma mark - Identifiers
+
 /** ---------------------------------------------------------------------------------------
  * @name Identifiers
  *  ---------------------------------------------------------------------------------------
@@ -232,6 +257,7 @@ MAKE_SYSTEM_PROP(DISMISS_BUTTON_LOCATION_RIGHT, 1);*/
 //}
 
 #pragma mark - Profile
+
 /** ---------------------------------------------------------------------------------------
  * @name Profile
  *  ---------------------------------------------------------------------------------------
@@ -363,14 +389,11 @@ MAKE_SYSTEM_PROP(DISMISS_BUTTON_LOCATION_RIGHT, 1);*/
 }
 
 #pragma mark - Push
+
 /** ---------------------------------------------------------------------------------------
  * @name Push
  *  ---------------------------------------------------------------------------------------
  */
-
-//- (id)pushToken{
-//    return [Localytics pushToken];
-//}
 
 // Titanium handles the device token as a string (hex encoded) so we take it in as a string and convert it to NSData
 - (void)setPushToken:(id)arg{
@@ -390,38 +413,12 @@ MAKE_SYSTEM_PROP(DISMISS_BUTTON_LOCATION_RIGHT, 1);*/
     [Localytics setPushToken:pushToken];
 }
 
-- (void)handlePushNotificationOpened:(id)arg{
-    ENSURE_SINGLE_ARG(arg, NSDictionary)
-    NSDictionary *notificationInfo = arg;
-    
-    //[Localytics handlePushNotificationOpened:notificationInfo];
-}
-
 #pragma mark - In-App Message
+
 /** ---------------------------------------------------------------------------------------
  * @name In-App Message
  *  ---------------------------------------------------------------------------------------
  */
-
-// handleTestModeULR will take a URL as String (for Titanium) instead of an NSURL (in Objective-C)
-//- (id)handleTestModeURL:(id)arg{
-//    ENSURE_SINGLE_ARG(arg, NSString)
-//    NSURL *url = [NSURL URLWithString:arg];
-//    
-//    return NUMBOOL([Localytics handleTestModeURL:url]);
-//}
-
-//- (void)setInAppMessageDismissButtonImageWithName:(id)arg{
-//    ENSURE_SINGLE_ARG(arg, NSString);
-//    
-//    [Localytics setInAppMessageDismissButtonImageWithName:arg];
-//}
-//- (void)setInAppMessageDismissButtonLocation:(id)arg{
-//    [Localytics setInAppMessageDismissButtonLocation:[TiUtils intValue:arg]];
-//}
-//- (id)getInAppMessageDismissButtonLocation:(id)arg{
-//    return NUMINT([Localytics inAppMessageDismissButtonLocation]);
-//}
 
 - (void)triggerInAppMessage:(id)args{
     NSUInteger count = [args count];
@@ -445,6 +442,7 @@ MAKE_SYSTEM_PROP(DISMISS_BUTTON_LOCATION_RIGHT, 1);*/
 - (void)dismissCurrentInAppMessage:(id)args{ [Localytics dismissCurrentInAppMessage]; }
 
 #pragma mark - Developer Options
+
 /** ---------------------------------------------------------------------------------------
  * @name Developer Options
  *  ---------------------------------------------------------------------------------------
@@ -457,13 +455,6 @@ MAKE_SYSTEM_PROP(DISMISS_BUTTON_LOCATION_RIGHT, 1);*/
     [Localytics setLoggingEnabled:[TiUtils boolValue:arg]];
 }
 
-//- (id)isCollectingAdvertisingIdentifier{
-//    return NUMBOOL([Localytics isCollectingAdvertisingIdentifier]);
-//}
-//- (void)setCollectAdvertisingIdentifier:(id)arg{
-//    [Localytics setCollectAdvertisingIdentifier:[TiUtils boolValue:arg]];
-//}
-
 - (id)isOptedOut:(id)arg{
     return NUMBOOL([Localytics isOptedOut]);
 }
@@ -474,6 +465,7 @@ MAKE_SYSTEM_PROP(DISMISS_BUTTON_LOCATION_RIGHT, 1);*/
 - (id)isTestModeEnabled:(id)arg{
     return NUMBOOL([Localytics isTestModeEnabled]);
 }
+
 - (void)setTestModeEnabled:(id)arg{
     [Localytics setTestModeEnabled:[TiUtils boolValue:arg]];
 }
@@ -487,11 +479,130 @@ MAKE_SYSTEM_PROP(DISMISS_BUTTON_LOCATION_RIGHT, 1);*/
 - (id)getInstallId:(id)args{
     return [Localytics installId];
 }
+
 - (id)getLibraryVersion:(id)args{
     return [Localytics libraryVersion];
 }
+
 - (id)getAppKey:(id)args{
     return [Localytics appKey];
+}
+
+#pragma mark - CLLocationManagerDelegate
+
+- (void)locationManager:(CLLocationManager *)manager didEnterRegion:(CLRegion *)region
+{
+  DebugLog(@"[DEBUG] Entered beacon region: %@", region.identifier);
+  [_beaconLocationManager startRangingBeaconsInRegion:(CLBeaconRegion *)region];
+}
+
+- (void)locationManager:(CLLocationManager *)manager didExitRegion:(CLRegion *)region
+{
+  DebugLog(@"[DEBUG] Exited beacon region: %@", region.identifier);
+  [_beaconLocationManager stopRangingBeaconsInRegion:(CLBeaconRegion *)region];
+}
+
+- (void)locationManager:(CLLocationManager *)manager didStartMonitoringForRegion:(CLRegion *)region
+{
+  DebugLog(@"[DEBUG] Started monitoring beacon region: %@", region.identifier);
+  [_beaconLocationManager requestStateForRegion:region];
+}
+
+- (void)locationManager:(CLLocationManager *)manager didDetermineState:(CLRegionState)state forRegion:(CLRegion *)region
+{
+  if (state == CLRegionStateInside) {
+    DebugLog(@"[DEBUG] Already inside region %@, starting ranging.", region.identifier);
+    [_beaconLocationManager startRangingBeaconsInRegion:(CLBeaconRegion *)region];
+  }
+
+}
+
+- (void)locationManager:(CLLocationManager *)manager monitoringDidFailForRegion:(CLRegion *)region withError:(NSError *)error
+{
+  DebugLog(@"[DEBUG] Monitoring beacon region %@, failed!", region.identifier);
+  DebugLog(@"[ERROR] %@", error.localizedDescription);
+}
+
+- (void)locationManager:(CLLocationManager *)manager didRangeBeacons:(NSArray<CLBeacon *> *)beacons inRegion:(CLBeaconRegion *)region
+{
+  DebugLog(@"[DEBUG] %i beacons in range", beacons.count);
+
+  for (CLBeacon *beacon in beacons) {
+    DebugLog(@"[DEUG] Beacon = %@, proximity = %lu", beacon.proximityUUID.UUIDString, beacon.proximity)
+  }
+  
+  [self reportCrossings:beacons inRegion:region];
+
+}
+
+- (void)locationManager:(CLLocationManager *)manager rangingBeaconsDidFailForRegion:(CLBeaconRegion *)region withError:(NSError *)error
+{
+  DebugLog(@"[DEBUG] Ranging beacon region %@, failed!", region.identifier);
+  DebugLog(@"[ERROR] %@", error.localizedDescription);
+}
+
+#pragma mark Utilities
+
+- (void)reportCrossings:(NSArray<CLBeacon *> *)beacons inRegion:(CLRegion *)region
+{
+  for (CLBeacon *beacon in beacons) {
+    NSString *identifier = [NSString stringWithFormat:@"%@/%@/%@", beacon.proximityUUID.UUIDString, beacon.major, beacon.minor];
+    
+    CLBeacon *previous = [_beaconProximities objectForKey:identifier];
+
+    if (previous != nil) {
+      if (previous.proximity != beacon.proximity) {
+        NSMutableDictionary *event = [NSMutableDictionary dictionaryWithDictionary:[self detailsForBeacon:beacon]];
+        [event setObject:region.identifier forKey:@"identifier"];
+        [event setObject:[self decodeProximity:previous.proximity] forKey:@"fromProximity"];
+        
+        [_monitoringCallback call:@[event] thisObject:self];
+      }
+    } else {
+      NSMutableDictionary *event = [NSMutableDictionary dictionaryWithDictionary:[self detailsForBeacon:beacon]];
+      [event setObject:region.identifier forKey:@"identifier"];
+      [_monitoringCallback call:@[event] thisObject:self];
+    }
+    
+    [_beaconProximities setObject:beacon forKey:identifier];
+  }
+}
+
+- (NSDictionary *)detailsForBeacon:(CLBeacon *)beacon
+{
+  
+  NSString *proximity = [self decodeProximity:beacon.proximity];
+  
+  NSDictionary *details = [[NSDictionary alloc] initWithObjectsAndKeys:
+                           beacon.proximityUUID.UUIDString, @"uuid",
+                           [NSString stringWithFormat:@"%@", beacon.major], @"major",
+                           [NSString stringWithFormat:@"%@", beacon.minor], @"minor",
+                           proximity, @"proximity",
+                           [NSString stringWithFormat:@"%f", beacon.accuracy], @"accuracy",
+                           [NSString stringWithFormat:@"%ld", (long)beacon.rssi], @"rssi",
+                           nil
+                           ];
+  
+  return [details autorelease];
+}
+
+- (NSString *)decodeProximity:(int)proximity
+{
+  switch (proximity) {
+    case CLProximityNear:
+      return @"near";
+      break;
+    case CLProximityImmediate:
+      return @"immediate";
+      break;
+    case CLProximityFar:
+      return @"far";
+      break;
+    case CLProximityUnknown:
+    default:
+      return @"unknown";
+      break;
+  }
 }
 
 @end
