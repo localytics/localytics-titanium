@@ -6,11 +6,11 @@
  */
 
 #import "ComLocalyticsModule.h"
+#import "TiApp.h"
 #import "TiBase.h"
 #import "TiHost.h"
 #import "TiUtils.h"
-#import "TiApp.h"
-    
+
 #import <Localytics/Localytics.h>
 
 @implementation ComLocalyticsModule
@@ -25,19 +25,21 @@ MAKE_SYSTEM_PROP(DISMISS_BUTTON_LOCATION_RIGHT, 1);*/
 // this is generated for your module, please do not change it
 - (id)moduleGUID
 {
-	return @"e774230a-3345-4c23-8f61-98569209cfd8";
+  return @"e774230a-3345-4c23-8f61-98569209cfd8";
 }
 
 // this is generated for your module, please do not change it
-- (NSString*)moduleId
+- (NSString *)moduleId
 {
-	return @"com.localytics";
+  return @"com.localytics";
 }
 
 #pragma mark Lifecycle
 
-- (void)applicationDidBecomeActive:(id)arg{}
-- (void)applicationWillResign:(id)arg{}
+- (void)applicationDidBecomeActive:(id)arg
+{
+}
+- (void)applicationWillResign:(id)arg {}
 
 #pragma mark Cleanup
 
@@ -54,7 +56,7 @@ MAKE_SYSTEM_PROP(DISMISS_BUTTON_LOCATION_RIGHT, 1);*/
 
 - (NSString *)plistAppKey:(id)arg
 {
-    return [[NSBundle mainBundle]objectForInfoDictionaryKey:@"LocalyticsAppKey"];
+  return [[NSBundle mainBundle] objectForInfoDictionaryKey:@"LocalyticsAppKey"];
 }
 
 #pragma mark - Beacons
@@ -63,33 +65,32 @@ MAKE_SYSTEM_PROP(DISMISS_BUTTON_LOCATION_RIGHT, 1);*/
 {
   ENSURE_SINGLE_ARG(callback, KrollCallback);
   RELEASE_TO_NIL(_monitoringCallback);
-  
+
   NSString *ESTIMOTE_UUID = @"B9407F30-F5F8-466E-AFF9-25556B57FE6D";
   NSString *ESTIMATE_IDENTIFIER = @"Estimote Beacons";
-  
+
   if (_monitoringCallback != nil || _beaconLocationManager != nil) {
     TiExceptionThrowWithNameAndReason(@"Beacon error", @"Attempted to start monitoring that already started", @"The location manager or monitoring callback have already been set. Call \"stopMonitoring()\" before attempting to start monitoring again", CODELOCATION);
     return;
   }
 
   _monitoringCallback = [callback retain];
-  
+
   _beaconLocationManager = [[CLLocationManager alloc] init];
   _beaconProximities = [[NSMutableDictionary alloc] init];
 
   [_beaconLocationManager setDelegate:self];
-  
+
   CLBeaconRegion *beaconRegion = [[CLBeaconRegion alloc] initWithProximityUUID:[[NSUUID alloc] initWithUUIDString:ESTIMOTE_UUID]
                                                                     identifier:ESTIMATE_IDENTIFIER];
 
   [_beaconLocationManager startRangingBeaconsInRegion:beaconRegion];
 }
 
-
 - (void)stopMonitoring:(id)unused
 {
   NSSet<CLRegion *> *rangedRegions = [_beaconLocationManager rangedRegions];
-  
+
   for (CLRegion *region in rangedRegions) {
     [_beaconLocationManager stopRangingBeaconsInRegion:(CLBeaconRegion *)region];
   }
@@ -107,49 +108,47 @@ MAKE_SYSTEM_PROP(DISMISS_BUTTON_LOCATION_RIGHT, 1);*/
  *  ---------------------------------------------------------------------------------------
  */
 
-- (void)autoIntegrate:(NSArray<id> * _Nonnull)args
+- (void)autoIntegrate:(NSArray<id> *_Nonnull)args
 {
-    ENSURE_ARG_COUNT(args, 2)
-    
-    NSString *appKey = [args objectAtIndex: 0];
-    NSDictionary *options = [args objectAtIndex: 1];
-    
-    if (appKey == nil){
-        appKey = [[NSBundle mainBundle]objectForInfoDictionaryKey:@"LocalyticsAppKey"];
-    }
-    if (appKey) {
-        NSDictionary *launchOptions = [[TiApp app] launchOptions];
-        [Localytics autoIntegrate:appKey withLocalyticsOptions:options launchOptions:launchOptions];
-    }
+  ENSURE_ARG_COUNT(args, 2)
+
+  NSString *appKey = [args objectAtIndex:0];
+  NSDictionary *options = [args objectAtIndex:1];
+
+  if (appKey == nil) {
+    appKey = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"LocalyticsAppKey"];
+  }
+  if (appKey) {
+    NSDictionary *launchOptions = [[TiApp app] launchOptions];
+    [Localytics autoIntegrate:appKey withLocalyticsOptions:options launchOptions:launchOptions];
+  }
 }
 
-- (void)integrate:(NSArray<id> * _Nonnull)args
+- (void)integrate:(NSArray<id> *_Nonnull)args
 {
-    NSString *appKey = [args objectAtIndex: 0];
-    NSDictionary *options = [args objectAtIndex: 1];
-    
-    if (appKey == nil){
-        appKey = [[NSBundle mainBundle]objectForInfoDictionaryKey:@"LocalyticsAppKey"];
-    }
-    if (appKey){
-        [Localytics integrate:appKey withLocalyticsOptions:options];
-    }
+  NSString *appKey = [args objectAtIndex:0];
+  NSDictionary *options = [args objectAtIndex:1];
+
+  if (appKey == nil) {
+    appKey = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"LocalyticsAppKey"];
+  }
+  if (appKey) {
+    [Localytics integrate:appKey withLocalyticsOptions:options];
+  }
 }
 
 - (void)openSession:(__unused id)unused
 {
-    [Localytics openSession];
+  [Localytics openSession];
 }
 - (void)closeSession:(__unused id)unused
 {
-    [Localytics closeSession];
-    
+  [Localytics closeSession];
 }
 
 - (void)upload:(__unused id)unused
 {
-    [Localytics upload];
-    
+  [Localytics upload];
 }
 
 #pragma mark - Event Tagging
@@ -159,36 +158,38 @@ MAKE_SYSTEM_PROP(DISMISS_BUTTON_LOCATION_RIGHT, 1);*/
  *  ---------------------------------------------------------------------------------------
  */
 
-- (void)tagEvent:(id)args{
-    NSUInteger count = [args count];
-    
-    NSString *eventName = nil;
-    NSDictionary *attributes = nil;
-    NSNumber *customerValueIncrease = nil;
-    
-    if (count > 0){
-        ENSURE_TYPE(args[0], NSString);
-        eventName = [TiUtils stringValue:args[0]];
-    }
-    
-    if (count > 1){
-        ENSURE_TYPE(args[1], NSDictionary);
-        attributes = (NSDictionary *)args[1];
-    }
-    
-    if (count > 2){
-        ENSURE_TYPE(args[2], NSNumber);
-        customerValueIncrease = (NSNumber *)args[2];
-    }
-    
-    [Localytics tagEvent:eventName attributes:attributes customerValueIncrease:customerValueIncrease];
+- (void)tagEvent:(id)args
+{
+  NSUInteger count = [args count];
+
+  NSString *eventName = nil;
+  NSDictionary *attributes = nil;
+  NSNumber *customerValueIncrease = nil;
+
+  if (count > 0) {
+    ENSURE_TYPE(args[0], NSString);
+    eventName = [TiUtils stringValue:args[0]];
+  }
+
+  if (count > 1) {
+    ENSURE_TYPE(args[1], NSDictionary);
+    attributes = (NSDictionary *)args[1];
+  }
+
+  if (count > 2) {
+    ENSURE_TYPE(args[2], NSNumber);
+    customerValueIncrease = (NSNumber *)args[2];
+  }
+
+  [Localytics tagEvent:eventName attributes:attributes customerValueIncrease:customerValueIncrease];
 }
 
 #pragma mark - Tag Screen Method
 
-- (void)tagScreen:(id)arg{
-    ENSURE_SINGLE_ARG(arg, NSString);
-    [Localytics tagScreen:arg];
+- (void)tagScreen:(id)arg
+{
+  ENSURE_SINGLE_ARG(arg, NSString);
+  [Localytics tagScreen:arg];
 }
 
 #pragma mark - Custom Dimensions
@@ -198,18 +199,20 @@ MAKE_SYSTEM_PROP(DISMISS_BUTTON_LOCATION_RIGHT, 1);*/
  *  ---------------------------------------------------------------------------------------
  */
 
-- (void)setCustomDimension:(id)args{
-    ENSURE_ARG_COUNT(args, 2);
-    NSUInteger dimension = [TiUtils intValue:args[0]];
-    ENSURE_TYPE(args[1], NSString);
-    NSString *value = [TiUtils stringValue:args[1]];
-    
-    [Localytics setValue:value forCustomDimension:dimension];
+- (void)setCustomDimension:(id)args
+{
+  ENSURE_ARG_COUNT(args, 2);
+  NSUInteger dimension = [TiUtils intValue:args[0]];
+  ENSURE_TYPE(args[1], NSString);
+  NSString *value = [TiUtils stringValue:args[1]];
+
+  [Localytics setValue:value forCustomDimension:dimension];
 }
-- (id)getCustomDimension:(id)arg{
-    NSUInteger dimension = [TiUtils intValue:arg];
-    
-    return [Localytics valueForCustomDimension:dimension];
+- (id)getCustomDimension:(id)arg
+{
+  NSUInteger dimension = [TiUtils intValue:arg];
+
+  return [Localytics valueForCustomDimension:dimension];
 }
 
 #pragma mark - Identifiers
@@ -219,30 +222,33 @@ MAKE_SYSTEM_PROP(DISMISS_BUTTON_LOCATION_RIGHT, 1);*/
  *  ---------------------------------------------------------------------------------------
  */
 
-- (void)setIdentifier:(id)args{
-    ENSURE_ARG_COUNT(args, 2);
-    ENSURE_TYPE(args[0], NSString);
-    NSString *identifier = [TiUtils stringValue:args[0]];
-    ENSURE_TYPE(args[1], NSString);
-    NSString *value = [TiUtils stringValue:args[1]];
-    
-    [Localytics setValue:value forIdentifier:identifier];
+- (void)setIdentifier:(id)args
+{
+  ENSURE_ARG_COUNT(args, 2);
+  ENSURE_TYPE(args[0], NSString);
+  NSString *identifier = [TiUtils stringValue:args[0]];
+  ENSURE_TYPE(args[1], NSString);
+  NSString *value = [TiUtils stringValue:args[1]];
+
+  [Localytics setValue:value forIdentifier:identifier];
 }
-- (id)getIdentifier:(id)arg{
-    ENSURE_SINGLE_ARG(arg, NSString);
-    return [Localytics valueForIdentifier:arg];
+- (id)getIdentifier:(id)arg
+{
+  ENSURE_SINGLE_ARG(arg, NSString);
+  return [Localytics valueForIdentifier:arg];
 }
 
 // Pass in a string to set the id or pass in a nil to clear the id
-- (void)setCustomerId:(id)arg{
-    NSString *customerId = nil;
-    
-    if (arg != nil){
-        ENSURE_TYPE(arg, NSString);
-        customerId = arg;
-    }
+- (void)setCustomerId:(id)arg
+{
+  NSString *customerId = nil;
 
-    [Localytics setCustomerId:customerId];
+  if (arg != nil) {
+    ENSURE_TYPE(arg, NSString);
+    customerId = arg;
+  }
+
+  [Localytics setCustomerId:customerId];
 }
 
 // setLocation takes in a dictionary with two keys "latitude" & "longitude"
@@ -252,7 +258,7 @@ MAKE_SYSTEM_PROP(DISMISS_BUTTON_LOCATION_RIGHT, 1);*/
 //    CLLocationCoordinate2D location;
 //    location.latitude = [TiUtils doubleValue:@"latitude" properties:arg];
 //    location.longitude = [TiUtils doubleValue:@"longitude" properties:arg];
-//    
+//
 //    [Localytics setLocation:location];
 //}
 
@@ -263,129 +269,135 @@ MAKE_SYSTEM_PROP(DISMISS_BUTTON_LOCATION_RIGHT, 1);*/
  *  ---------------------------------------------------------------------------------------
  */
 
-- (void)setProfileAttribute:(id)args{
-    NSUInteger count = [args count];
-    
-    NSObject<NSCopying> *value = nil;
-    NSString *attribute = nil;
-    NSUInteger scope = LLProfileScopeApplication;
-    
-    if (count > 1){
-        ENSURE_TYPE(args[0], NSString);
-        attribute = [TiUtils stringValue:args[0]];
-        
-        value = args[1];
-    }
-    
-    if (count > 2){
-        scope = [TiUtils intValue:args[2]];
-    }
-    
-    [Localytics setValue:value forProfileAttribute:attribute withScope:scope];
+- (void)setProfileAttribute:(id)args
+{
+  NSUInteger count = [args count];
+
+  NSObject<NSCopying> *value = nil;
+  NSString *attribute = nil;
+  NSUInteger scope = LLProfileScopeApplication;
+
+  if (count > 1) {
+    ENSURE_TYPE(args[0], NSString);
+    attribute = [TiUtils stringValue:args[0]];
+
+    value = args[1];
+  }
+
+  if (count > 2) {
+    scope = [TiUtils intValue:args[2]];
+  }
+
+  [Localytics setValue:value forProfileAttribute:attribute withScope:scope];
 }
 
-- (void)addProfileAttributesToSet:(id)args{
-    NSUInteger count = [args count];
-    
-    NSArray *values = nil;
-    NSString *attribute = nil;
-    NSUInteger scope = LLProfileScopeApplication;
-    
-    if (count > 1){
-        ENSURE_TYPE(args[0], NSString);
-        attribute = [TiUtils stringValue:args[0]];
-        
-        ENSURE_TYPE(args[1], NSArray);
-        values = (NSArray *)args[1];
-    }
-    
-    if (count > 2){
-        scope = [TiUtils intValue:args[2]];
-    }
-    
-    [Localytics addValues:values toSetForProfileAttribute:attribute withScope:scope];
+- (void)addProfileAttributesToSet:(id)args
+{
+  NSUInteger count = [args count];
+
+  NSArray *values = nil;
+  NSString *attribute = nil;
+  NSUInteger scope = LLProfileScopeApplication;
+
+  if (count > 1) {
+    ENSURE_TYPE(args[0], NSString);
+    attribute = [TiUtils stringValue:args[0]];
+
+    ENSURE_TYPE(args[1], NSArray);
+    values = (NSArray *)args[1];
+  }
+
+  if (count > 2) {
+    scope = [TiUtils intValue:args[2]];
+  }
+
+  [Localytics addValues:values toSetForProfileAttribute:attribute withScope:scope];
 }
 
-- (void)removeProfileAttributesFromSet:(id)args{
-    NSUInteger count = [args count];
-    
-    NSArray *values = nil;
-    NSString *attribute = nil;
-    NSUInteger scope = LLProfileScopeApplication;
-    
-    if (count > 1){
-        ENSURE_TYPE(args[0], NSString);
-        attribute = [TiUtils stringValue:args[0]];
+- (void)removeProfileAttributesFromSet:(id)args
+{
+  NSUInteger count = [args count];
 
-        ENSURE_TYPE(args[1], NSArray);
-        values = (NSArray *)args[1];
-    }
-    
-    if (count > 2){
-        scope = [TiUtils intValue:args[2]];
-    }
-    
-    [Localytics removeValues:values fromSetForProfileAttribute:attribute withScope:scope];
+  NSArray *values = nil;
+  NSString *attribute = nil;
+  NSUInteger scope = LLProfileScopeApplication;
+
+  if (count > 1) {
+    ENSURE_TYPE(args[0], NSString);
+    attribute = [TiUtils stringValue:args[0]];
+
+    ENSURE_TYPE(args[1], NSArray);
+    values = (NSArray *)args[1];
+  }
+
+  if (count > 2) {
+    scope = [TiUtils intValue:args[2]];
+  }
+
+  [Localytics removeValues:values fromSetForProfileAttribute:attribute withScope:scope];
 }
 
-- (void)incrementProfileAttribute:(id)args{
-    NSUInteger count = [args count];
-    
-    NSInteger value = 0;
-    NSString *attribute = nil;
-    NSUInteger scope = LLProfileScopeApplication;
-    
-    if (count > 1){
-        ENSURE_TYPE(args[0], NSString);
-        attribute = [TiUtils stringValue:args[0]];
+- (void)incrementProfileAttribute:(id)args
+{
+  NSUInteger count = [args count];
 
-        value = [TiUtils intValue:args[1]];
-    }
-    
-    if (count > 2){
-        scope = [TiUtils intValue:args[2]];
-    }
-    
-    [Localytics incrementValueBy:value forProfileAttribute:attribute withScope:scope];
+  NSInteger value = 0;
+  NSString *attribute = nil;
+  NSUInteger scope = LLProfileScopeApplication;
+
+  if (count > 1) {
+    ENSURE_TYPE(args[0], NSString);
+    attribute = [TiUtils stringValue:args[0]];
+
+    value = [TiUtils intValue:args[1]];
+  }
+
+  if (count > 2) {
+    scope = [TiUtils intValue:args[2]];
+  }
+
+  [Localytics incrementValueBy:value forProfileAttribute:attribute withScope:scope];
 }
 
-- (void)decrementProfileAttribute:(id)args{
-    NSUInteger count = [args count];
-    
-    NSInteger value = 0;
-    NSString *attribute = nil;
-    NSUInteger scope = LLProfileScopeApplication;
+- (void)decrementProfileAttribute:(id)args
+{
+  NSUInteger count = [args count];
 
-    if (count > 1){
-        ENSURE_TYPE(args[0], NSString);
-        attribute = [TiUtils stringValue:args[0]];
+  NSInteger value = 0;
+  NSString *attribute = nil;
+  NSUInteger scope = LLProfileScopeApplication;
 
-        value = [TiUtils intValue:args[1]];
-    }
-    
-    if (count > 2){
-        scope = [TiUtils intValue:args[2]];
-    }
-    
-    [Localytics decrementValueBy:value forProfileAttribute:attribute withScope:scope];
+  if (count > 1) {
+    ENSURE_TYPE(args[0], NSString);
+    attribute = [TiUtils stringValue:args[0]];
+
+    value = [TiUtils intValue:args[1]];
+  }
+
+  if (count > 2) {
+    scope = [TiUtils intValue:args[2]];
+  }
+
+  [Localytics decrementValueBy:value forProfileAttribute:attribute withScope:scope];
 }
 
-- (void)deleteProfileAttribute:(id)args{
-    NSUInteger count = [args count];
-    
-    NSString *attribute = nil;
-    NSUInteger scope = LLProfileScopeApplication;
-    
-    if (count > 0){
-        ENSURE_TYPE(args[0], NSString);
-        attribute = [TiUtils stringValue:args[0]];
-    }
-    
-    if (count > 1){
-        scope = [TiUtils intValue:args[1]];
-    }
-    
-    [Localytics deleteProfileAttribute:attribute withScope:scope];
+- (void)deleteProfileAttribute:(id)args
+{
+  NSUInteger count = [args count];
+
+  NSString *attribute = nil;
+  NSUInteger scope = LLProfileScopeApplication;
+
+  if (count > 0) {
+    ENSURE_TYPE(args[0], NSString);
+    attribute = [TiUtils stringValue:args[0]];
+  }
+
+  if (count > 1) {
+    scope = [TiUtils intValue:args[1]];
+  }
+
+  [Localytics deleteProfileAttribute:attribute withScope:scope];
 }
 
 #pragma mark - Push
@@ -396,21 +408,22 @@ MAKE_SYSTEM_PROP(DISMISS_BUTTON_LOCATION_RIGHT, 1);*/
  */
 
 // Titanium handles the device token as a string (hex encoded) so we take it in as a string and convert it to NSData
-- (void)setPushToken:(id)arg{
-    ENSURE_SINGLE_ARG(arg, NSString)
-    NSString *titaniumPushToken = arg;
+- (void)setPushToken:(id)arg
+{
+  ENSURE_SINGLE_ARG(arg, NSString)
+  NSString *titaniumPushToken = arg;
 
-    NSMutableData *pushToken = [[NSMutableData alloc] init];
-    unsigned char whole_byte;
-    char byte_chars[3] = {'\0','\0','\0'};
-    for (int i=0; i < [titaniumPushToken length]/2; i++) {
-        byte_chars[0] = [titaniumPushToken characterAtIndex:i*2];
-        byte_chars[1] = [titaniumPushToken characterAtIndex:i*2+1];
-        whole_byte = strtol(byte_chars, NULL, 16);
-        [pushToken appendBytes:&whole_byte length:1];
-    }
-    
-    [Localytics setPushToken:pushToken];
+  NSMutableData *pushToken = [[NSMutableData alloc] init];
+  unsigned char whole_byte;
+  char byte_chars[3] = { '\0', '\0', '\0' };
+  for (int i = 0; i < [titaniumPushToken length] / 2; i++) {
+    byte_chars[0] = [titaniumPushToken characterAtIndex:i * 2];
+    byte_chars[1] = [titaniumPushToken characterAtIndex:i * 2 + 1];
+    whole_byte = strtol(byte_chars, NULL, 16);
+    [pushToken appendBytes:&whole_byte length:1];
+  }
+
+  [Localytics setPushToken:pushToken];
 }
 
 #pragma mark - In-App Message
@@ -420,26 +433,29 @@ MAKE_SYSTEM_PROP(DISMISS_BUTTON_LOCATION_RIGHT, 1);*/
  *  ---------------------------------------------------------------------------------------
  */
 
-- (void)triggerInAppMessage:(id)args{
-    NSUInteger count = [args count];
-    
-    NSString *triggerName = nil;
-    NSDictionary *attributes = nil;
-    
-    if (count > 0){
-        ENSURE_TYPE(args[0], NSString);
-        triggerName = [TiUtils stringValue:args[0]];
-    }
-    
-    if (count > 1){
-        ENSURE_TYPE(args[1], NSDictionary);
-        attributes = (NSDictionary *)args[1];
-    }
-    
-    [Localytics triggerInAppMessage:triggerName withAttributes:attributes];
+- (void)triggerInAppMessage:(id)args
+{
+  NSUInteger count = [args count];
+
+  NSString *triggerName = nil;
+  NSDictionary *attributes = nil;
+
+  if (count > 0) {
+    ENSURE_TYPE(args[0], NSString);
+    triggerName = [TiUtils stringValue:args[0]];
+  }
+
+  if (count > 1) {
+    ENSURE_TYPE(args[1], NSDictionary);
+    attributes = (NSDictionary *)args[1];
+  }
+
+  [Localytics triggerInAppMessage:triggerName withAttributes:attributes];
 }
 
-- (void)dismissCurrentInAppMessage:(id)args{ [Localytics dismissCurrentInAppMessage]; }
+- (void)dismissCurrentInAppMessage:(id)args {
+  [Localytics dismissCurrentInAppMessage
+]; }
 
 #pragma mark - Developer Options
 
@@ -448,44 +464,54 @@ MAKE_SYSTEM_PROP(DISMISS_BUTTON_LOCATION_RIGHT, 1);*/
  *  ---------------------------------------------------------------------------------------
  */
 
-- (id)isLoggingEnabled:(id)arg{
-    return NUMBOOL([Localytics isLoggingEnabled]);
+- (id)isLoggingEnabled:(id)arg
+{
+  return NUMBOOL([Localytics isLoggingEnabled]);
 }
-- (void)setLoggingEnabled:(id)arg{
-    [Localytics setLoggingEnabled:[TiUtils boolValue:arg]];
-}
-
-- (id)isOptedOut:(id)arg{
-    return NUMBOOL([Localytics isOptedOut]);
-}
-- (void)setOptedOut:(id)arg{
-    [Localytics setOptedOut:[TiUtils boolValue:arg]];
+- (void)setLoggingEnabled:(id)arg
+{
+  [Localytics setLoggingEnabled:[TiUtils boolValue:arg]];
 }
 
-- (id)isTestModeEnabled:(id)arg{
-    return NUMBOOL([Localytics isTestModeEnabled]);
+- (id)isOptedOut:(id)arg
+{
+  return NUMBOOL([Localytics isOptedOut]);
+}
+- (void)setOptedOut:(id)arg
+{
+  [Localytics setOptedOut:[TiUtils boolValue:arg]];
 }
 
-- (void)setTestModeEnabled:(id)arg{
-    [Localytics setTestModeEnabled:[TiUtils boolValue:arg]];
+- (id)isTestModeEnabled:(id)arg
+{
+  return NUMBOOL([Localytics isTestModeEnabled]);
 }
 
-- (void)setOptions:(id)arg{
-    ENSURE_ARG_COUNT(arg, 1)
-    ENSURE_TYPE(arg[0], NSDictionary)
-    [Localytics setOptions: (NSDictionary*) arg[0]];
+- (void)setTestModeEnabled:(id)arg
+{
+  [Localytics setTestModeEnabled:[TiUtils boolValue:arg]];
 }
 
-- (id)getInstallId:(id)args{
-    return [Localytics installId];
+- (void)setOptions:(id)arg
+{
+  ENSURE_ARG_COUNT(arg, 1)
+  ENSURE_TYPE(arg[0], NSDictionary)
+      [Localytics setOptions:(NSDictionary *)arg[0]];
 }
 
-- (id)getLibraryVersion:(id)args{
-    return [Localytics libraryVersion];
+- (id)getInstallId:(id)args
+{
+  return [Localytics installId];
 }
 
-- (id)getAppKey:(id)args{
-    return [Localytics appKey];
+- (id)getLibraryVersion:(id)args
+{
+  return [Localytics libraryVersion];
+}
+
+- (id)getAppKey:(id)args
+{
+  return [Localytics appKey];
 }
 
 #pragma mark - CLLocationManagerDelegate
@@ -514,7 +540,6 @@ MAKE_SYSTEM_PROP(DISMISS_BUTTON_LOCATION_RIGHT, 1);*/
     DebugLog(@"[DEBUG] Already inside region %@, starting ranging.", region.identifier);
     [_beaconLocationManager startRangingBeaconsInRegion:(CLBeaconRegion *)region];
   }
-
 }
 
 - (void)locationManager:(CLLocationManager *)manager monitoringDidFailForRegion:(CLRegion *)region withError:(NSError *)error
@@ -530,9 +555,8 @@ MAKE_SYSTEM_PROP(DISMISS_BUTTON_LOCATION_RIGHT, 1);*/
   for (CLBeacon *beacon in beacons) {
     DebugLog(@"[DEUG] Beacon = %@, proximity = %lu", beacon.proximityUUID.UUIDString, beacon.proximity)
   }
-  
-  [self reportCrossings:beacons inRegion:region];
 
+  [self reportCrossings:beacons inRegion:region];
 }
 
 - (void)locationManager:(CLLocationManager *)manager rangingBeaconsDidFailForRegion:(CLBeaconRegion *)region withError:(NSError *)error
@@ -547,7 +571,7 @@ MAKE_SYSTEM_PROP(DISMISS_BUTTON_LOCATION_RIGHT, 1);*/
 {
   for (CLBeacon *beacon in beacons) {
     NSString *identifier = [NSString stringWithFormat:@"%@/%@/%@", beacon.proximityUUID.UUIDString, beacon.major, beacon.minor];
-    
+
     CLBeacon *previous = [_beaconProximities objectForKey:identifier];
 
     if (previous != nil) {
@@ -555,53 +579,52 @@ MAKE_SYSTEM_PROP(DISMISS_BUTTON_LOCATION_RIGHT, 1);*/
         NSMutableDictionary *event = [NSMutableDictionary dictionaryWithDictionary:[self detailsForBeacon:beacon]];
         [event setObject:region.identifier forKey:@"identifier"];
         [event setObject:[self decodeProximity:previous.proximity] forKey:@"fromProximity"];
-        
-        [_monitoringCallback call:@[event] thisObject:self];
+
+        [_monitoringCallback call:@[ event ] thisObject:self];
       }
     } else {
       NSMutableDictionary *event = [NSMutableDictionary dictionaryWithDictionary:[self detailsForBeacon:beacon]];
       [event setObject:region.identifier forKey:@"identifier"];
-      [_monitoringCallback call:@[event] thisObject:self];
+      [_monitoringCallback call:@[ event ] thisObject:self];
     }
-    
+
     [_beaconProximities setObject:beacon forKey:identifier];
   }
 }
 
 - (NSDictionary *)detailsForBeacon:(CLBeacon *)beacon
 {
-  
+
   NSString *proximity = [self decodeProximity:beacon.proximity];
-  
+
   NSDictionary *details = [[NSDictionary alloc] initWithObjectsAndKeys:
-                           beacon.proximityUUID.UUIDString, @"uuid",
-                           [NSString stringWithFormat:@"%@", beacon.major], @"major",
-                           [NSString stringWithFormat:@"%@", beacon.minor], @"minor",
-                           proximity, @"proximity",
-                           [NSString stringWithFormat:@"%f", beacon.accuracy], @"accuracy",
-                           [NSString stringWithFormat:@"%ld", (long)beacon.rssi], @"rssi",
-                           nil
-                           ];
-  
+                                                    beacon.proximityUUID.UUIDString, @"uuid",
+                                                [NSString stringWithFormat:@"%@", beacon.major], @"major",
+                                                [NSString stringWithFormat:@"%@", beacon.minor], @"minor",
+                                                proximity, @"proximity",
+                                                [NSString stringWithFormat:@"%f", beacon.accuracy], @"accuracy",
+                                                [NSString stringWithFormat:@"%ld", (long)beacon.rssi], @"rssi",
+                                                nil];
+
   return [details autorelease];
 }
 
 - (NSString *)decodeProximity:(int)proximity
 {
   switch (proximity) {
-    case CLProximityNear:
-      return @"near";
-      break;
-    case CLProximityImmediate:
-      return @"immediate";
-      break;
-    case CLProximityFar:
-      return @"far";
-      break;
-    case CLProximityUnknown:
-    default:
-      return @"unknown";
-      break;
+  case CLProximityNear:
+    return @"near";
+    break;
+  case CLProximityImmediate:
+    return @"immediate";
+    break;
+  case CLProximityFar:
+    return @"far";
+    break;
+  case CLProximityUnknown:
+  default:
+    return @"unknown";
+    break;
   }
 }
 

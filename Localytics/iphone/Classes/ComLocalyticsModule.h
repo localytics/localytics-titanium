@@ -8,8 +8,7 @@
 #import "TiModule.h"
 #import <CoreLocation/CoreLocation.h>
 
-@interface ComLocalyticsModule : TiModule <CLLocationManagerDelegate>
-{
+@interface ComLocalyticsModule : TiModule <CLLocationManagerDelegate> {
   KrollCallback *_monitoringCallback;
   CLLocationManager *_beaconLocationManager;
   NSMutableDictionary<NSString *, CLBeacon *> *_beaconProximities;
