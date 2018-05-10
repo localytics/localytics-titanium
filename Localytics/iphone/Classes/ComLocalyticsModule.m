@@ -168,6 +168,19 @@ MAKE_SYSTEM_PROP(PROFILE_SCOPE_ORG, 1);
   [Localytics pauseDataUploading:[TiUtils boolValue:value]];
 }
 
+- (void)setPrivacyOptedOut:(id)value
+{
+  [Localytics setPrivacyOptedOut:[TiUtils boolValue:value]];
+}
+
+- (void)setCustomerIdWithPrivacyOptedOut:(id)args
+{
+  NSString *cid = [args objectAtIndex:0];
+  BOOL optedOut = [TiUtils boolValue:[args objectAtIndex:1]];
+
+  [Localytics setCustomerId:cid privacyOptedOut:optedOut];
+}
+
 #pragma mark - Event Tagging
 
 /** ---------------------------------------------------------------------------------------

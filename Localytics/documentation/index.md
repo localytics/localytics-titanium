@@ -21,6 +21,14 @@ Localytics. For support email [support@localytics.com](mailto:support@localytics
 ## Installing
 * Follow the steps at http://docs.appcelerator.com/titanium/3.0/#!/guide/Using_a_Module to add the localytics module to your project
 
+## GDPR Complience
+
+The Titanium Localytics module includes a couple of privacy-related API's:
+- `pauseDataUploading()`
+- `setCustomerIdWithPrivacyOptedOut(customer_id: String, optedOut: Boolean)`
+- `setPrivacyOptedOut(optedOut: Boolean)`
+
+
 ## Integration
 #### Android
 * Open tiapp.xml in the XML editor mode. Add a `<manifest>` section to the `<android>` section if you have not already done so.
@@ -207,7 +215,6 @@ if (Ti.Platform.name == "iPhone OS") {
     });
 }
 localytics.registerPush(); // If you are using push
-localytics.pauseDataUploading() // Optional: Become GDPR complient by offering to pause data uploading
 ```
 ## License
 Copyright (c) 2015, Char Software, Inc. d/b/a Localytics
