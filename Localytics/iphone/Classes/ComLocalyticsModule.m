@@ -17,29 +17,18 @@
 
 MAKE_SYSTEM_PROP(PROFILE_SCOPE_APP, 0);
 MAKE_SYSTEM_PROP(PROFILE_SCOPE_ORG, 1);
-/*MAKE_SYSTEM_PROP(DISMISS_BUTTON_LOCATION_LEFT, 0);
-MAKE_SYSTEM_PROP(DISMISS_BUTTON_LOCATION_RIGHT, 1);*/
 
 #pragma mark Internal
 
-// this is generated for your module, please do not change it
 - (id)moduleGUID
 {
   return @"e774230a-3345-4c23-8f61-98569209cfd8";
 }
 
-// this is generated for your module, please do not change it
 - (NSString *)moduleId
 {
   return @"com.localytics";
 }
-
-#pragma mark Lifecycle
-
-- (void)applicationDidBecomeActive:(id)arg
-{
-}
-- (void)applicationWillResign:(id)arg {}
 
 #pragma mark Cleanup
 
@@ -61,30 +50,46 @@ MAKE_SYSTEM_PROP(DISMISS_BUTTON_LOCATION_RIGHT, 1);*/
 
 #pragma mark - Beacons
 
-- (void)startMonitoring:(id)callback
+- (void)startMonitoring:(id)value
 {
-  ENSURE_SINGLE_ARG(callback, KrollCallback);
-  RELEASE_TO_NIL(_monitoringCallback);
-
-  NSString *ESTIMOTE_UUID = @"B9407F30-F5F8-466E-AFF9-25556B57FE6D";
-  NSString *ESTIMATE_IDENTIFIER = @"Estimote Beacons";
-
-  if (_monitoringCallback != nil || _beaconLocationManager != nil) {
+  if (_beaconLocationManager != nil) {
     TiExceptionThrowWithNameAndReason(@"Beacon error", @"Attempted to start monitoring that already started", @"The location manager or monitoring callback have already been set. Call \"stopMonitoring()\" before attempting to start monitoring again", CODELOCATION);
     return;
   }
 
-  _monitoringCallback = [callback retain];
+  // Cleanup
+  RELEASE_TO_NIL(_monitoringCallback);
+  RELEASE_TO_NIL(_beaconLocationManager);
+  RELEASE_TO_NIL(_beaconProximities);
 
+  // Initialize
   _beaconLocationManager = [[CLLocationManager alloc] init];
-  _beaconProximities = [[NSMutableDictionary alloc] init];
-
   [_beaconLocationManager setDelegate:self];
+  _beaconProximities = [[NSMutableDictionary alloc] init];
+  CLBeaconRegion *_beaconRegion = nil;
 
-  CLBeaconRegion *beaconRegion = [[CLBeaconRegion alloc] initWithProximityUUID:[[NSUUID alloc] initWithUUIDString:ESTIMOTE_UUID]
-                                                                    identifier:ESTIMATE_IDENTIFIER];
+  // Handle both dictionary and single arg for backwards compatibility
+  if ([value isKindOfClass:[NSDictionary class]]) {
+    NSString *uuid = [value objectForKey:@"uuid"];
+    NSString *identifier = [value objectForKey:@"identifier"];
+    _monitoringCallback = [[value objectForKey:@"callback"] retain];
+    _beaconRegion = [[CLBeaconRegion alloc] initWithProximityUUID:[[NSUUID alloc] initWithUUIDString:uuid]
+                                                       identifier:identifier];
+  } else {
+    NSString *ESTIMOTE_UUID = @"B9407F30-F5F8-466E-AFF9-25556B57FE6D";
+    NSString *ESTIMATE_IDENTIFIER = @"Estimote Beacons";
 
-  [_beaconLocationManager startRangingBeaconsInRegion:beaconRegion];
+    DebugLog(@"[WARN] No beacon UUID and identifier provided. Using default UUID and identifier:\n- UUID: %@\n - Identifier: %@", ESTIMOTE_UUID, ESTIMATE_IDENTIFIER);
+    DebugLog(@"[WARN] Call this method with an object parameter, e.g. { uuid: 'BEACON_UUID', identifier: 'BEACON_IDENTIFIER'} for a more flexible solution");
+
+    ENSURE_SINGLE_ARG(value, KrollCallback);
+    _monitoringCallback = [value retain];
+
+    _beaconRegion = [[CLBeaconRegion alloc] initWithProximityUUID:[[NSUUID alloc] initWithUUIDString:ESTIMOTE_UUID]
+                                                       identifier:ESTIMATE_IDENTIFIER];
+  }
+
+  [_beaconLocationManager startRangingBeaconsInRegion:_beaconRegion];
 }
 
 - (void)stopMonitoring:(id)unused
@@ -116,6 +121,9 @@ MAKE_SYSTEM_PROP(DISMISS_BUTTON_LOCATION_RIGHT, 1);*/
   NSDictionary *options = [args objectAtIndex:1];
 
   if (appKey == nil) {
+    DebugLog(@"[WARN] Passing the Localytics app-key via the Info.plist has been deprecated for security reasons.");
+    DebugLog(@"[WARN] Please pass the app-key as the first argument of this method instead.");
+
     appKey = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"LocalyticsAppKey"];
   }
   if (appKey) {
@@ -130,6 +138,9 @@ MAKE_SYSTEM_PROP(DISMISS_BUTTON_LOCATION_RIGHT, 1);*/
   NSDictionary *options = [args objectAtIndex:1];
 
   if (appKey == nil) {
+    DebugLog(@"[WARN] Passing the Localytics app-key via the Info.plist has been deprecated for security reasons.");
+    DebugLog(@"[WARN] Please pass the app-key as the first argument of this method instead.");
+
     appKey = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"LocalyticsAppKey"];
   }
   if (appKey) {
@@ -137,18 +148,24 @@ MAKE_SYSTEM_PROP(DISMISS_BUTTON_LOCATION_RIGHT, 1);*/
   }
 }
 
-- (void)openSession:(__unused id)unused
+- (void)openSession:(id)unused
 {
   [Localytics openSession];
 }
-- (void)closeSession:(__unused id)unused
+
+- (void)closeSession:(id)unused
 {
   [Localytics closeSession];
 }
 
-- (void)upload:(__unused id)unused
+- (void)upload:(id)unused
 {
   [Localytics upload];
+}
+
+- (void)pauseDataUploading:(id)value
+{
+  [Localytics pauseDataUploading:[TiUtils boolValue:value]];
 }
 
 #pragma mark - Event Tagging
@@ -208,7 +225,8 @@ MAKE_SYSTEM_PROP(DISMISS_BUTTON_LOCATION_RIGHT, 1);*/
 
   [Localytics setValue:value forCustomDimension:dimension];
 }
-- (id)getCustomDimension:(id)arg
+
+- (NSString *)getCustomDimension:(id)arg
 {
   NSUInteger dimension = [TiUtils intValue:arg];
 
@@ -232,7 +250,8 @@ MAKE_SYSTEM_PROP(DISMISS_BUTTON_LOCATION_RIGHT, 1);*/
 
   [Localytics setValue:value forIdentifier:identifier];
 }
-- (id)getIdentifier:(id)arg
+
+- (NSString *)getIdentifier:(id)arg
 {
   ENSURE_SINGLE_ARG(arg, NSString);
   return [Localytics valueForIdentifier:arg];
@@ -253,13 +272,14 @@ MAKE_SYSTEM_PROP(DISMISS_BUTTON_LOCATION_RIGHT, 1);*/
 
 // setLocation takes in a dictionary with two keys "latitude" & "longitude"
 // which are both expected to be doubles
-- (void)setLocation:(id)arg{
-    ENSURE_SINGLE_ARG(arg, NSDictionary);
-    CLLocationCoordinate2D location;
-    location.latitude = [TiUtils doubleValue:@"latitude" properties:arg];
-    location.longitude = [TiUtils doubleValue:@"longitude" properties:arg];
+- (void)setLocation:(id)arg
+{
+  ENSURE_SINGLE_ARG(arg, NSDictionary);
+  CLLocationCoordinate2D location;
+  location.latitude = [TiUtils doubleValue:@"latitude" properties:arg];
+  location.longitude = [TiUtils doubleValue:@"longitude" properties:arg];
 
-    [Localytics setLocation:location];
+  [Localytics setLocation:location];
 }
 
 #pragma mark - Profile
@@ -453,7 +473,8 @@ MAKE_SYSTEM_PROP(DISMISS_BUTTON_LOCATION_RIGHT, 1);*/
   [Localytics triggerInAppMessage:triggerName withAttributes:attributes];
 }
 
-- (void)dismissCurrentInAppMessage:(id)args {
+- (void)dismissCurrentInAppMessage:(id)args
+{
   [Localytics dismissCurrentInAppMessage];
 }
 
@@ -464,7 +485,7 @@ MAKE_SYSTEM_PROP(DISMISS_BUTTON_LOCATION_RIGHT, 1);*/
  *  ---------------------------------------------------------------------------------------
  */
 
-- (id)isLoggingEnabled:(id)arg
+- (NSNumber *)isLoggingEnabled:(id)arg
 {
   return NUMBOOL([Localytics isLoggingEnabled]);
 }
@@ -473,18 +494,19 @@ MAKE_SYSTEM_PROP(DISMISS_BUTTON_LOCATION_RIGHT, 1);*/
   [Localytics setLoggingEnabled:[TiUtils boolValue:arg]];
 }
 
-- (id)isOptedOut:(id)arg
+- (NSNumber *)isOptedOut:(id)arg
 {
-  return NUMBOOL([Localytics isOptedOut]);
+  return @([Localytics isOptedOut]);
 }
+
 - (void)setOptedOut:(id)arg
 {
   [Localytics setOptedOut:[TiUtils boolValue:arg]];
 }
 
-- (id)isTestModeEnabled:(id)arg
+- (NSNumber *)isTestModeEnabled:(id)arg
 {
-  return NUMBOOL([Localytics isTestModeEnabled]);
+  return @([Localytics isTestModeEnabled]);
 }
 
 - (void)setTestModeEnabled:(id)arg
@@ -494,22 +516,22 @@ MAKE_SYSTEM_PROP(DISMISS_BUTTON_LOCATION_RIGHT, 1);*/
 
 - (void)setOptions:(id)arg
 {
-  ENSURE_ARG_COUNT(arg, 1)
-  ENSURE_TYPE(arg[0], NSDictionary)
-      [Localytics setOptions:(NSDictionary *)arg[0]];
+  ENSURE_ARG_COUNT(arg, 1);
+  ENSURE_TYPE(arg[0], NSDictionary);
+  [Localytics setOptions:(NSDictionary *)arg[0]];
 }
 
-- (id)getInstallId:(id)args
+- (NSString *)installId
 {
   return [Localytics installId];
 }
 
-- (id)getLibraryVersion:(id)args
+- (NSString *)libraryVersion
 {
   return [Localytics libraryVersion];
 }
 
-- (id)getAppKey:(id)args
+- (NSString *)appKey
 {
   return [Localytics appKey];
 }

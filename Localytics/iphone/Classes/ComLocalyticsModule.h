@@ -32,6 +32,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)upload:(__unused id)unused;
 
+- (void)pauseDataUploading:(id)value;
+
 #pragma mark - Event Tagging
 
 - (void)tagEvent:(id)args;
@@ -44,13 +46,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)setCustomDimension:(id)args;
 
-- (id)getCustomDimension:(id)arg;
+- (NSString *)getCustomDimension:(id)arg;
 
 #pragma mark - Identifiers
 
 - (void)setIdentifier:(id)args;
 
-- (id)getIdentifier:(id)arg;
+- (NSString *)getIdentifier:(id)arg;
 
 - (void)setCustomerId:(id)arg;
 
@@ -82,25 +84,25 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - Developer Options
 
-- (id)isLoggingEnabled:(id)arg;
+- (NSNumber *)isLoggingEnabled:(id)arg;
 
 - (void)setLoggingEnabled:(id)arg;
 
-- (id)isOptedOut:(id)arg;
+- (NSNumber *)isOptedOut:(id)arg;
 
 - (void)setOptedOut:(id)arg;
 
-- (id)isTestModeEnabled:(id)arg;
+- (NSNumber *)isTestModeEnabled:(id)arg;
 
 - (void)setTestModeEnabled:(id)arg;
 
 - (void)setOptions:(id)arg;
 
-- (id)getInstallId:(id)args;
+- (NSString *)installId;
 
-- (id)getLibraryVersion:(id)args;
+- (NSString *)libraryVersion;
 
-- (id)getAppKey:(id)args;
+- (NSString *)appKey;
 
 NS_ASSUME_NONNULL_END
 

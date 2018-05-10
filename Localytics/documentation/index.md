@@ -158,7 +158,9 @@ exports.registerPush = function() {
 
 
 ### Manual
+
 ##### Android
+
 For Android manual integration, you need to add the following to every window that you open:
 ```
 var win = new Window();
@@ -205,6 +207,7 @@ if (Ti.Platform.name == "iPhone OS") {
     });
 }
 localytics.registerPush(); // If you are using push
+localytics.pauseDataUploading() // Optional: Become GDPR complient by offering to pause data uploading
 ```
 ## License
 Copyright (c) 2015, Char Software, Inc. d/b/a Localytics
