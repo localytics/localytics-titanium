@@ -1,8 +1,8 @@
 /**
  * Localytics
  *
- * Created by Your Name
- * Copyright (c) 2015 Your Company. All rights reserved.
+ * Created by Localytics
+ * Copyright (c) 2015-present Localytics. All rights reserved.
  */
 
 #import "ComLocalyticsModule.h"
@@ -253,14 +253,14 @@ MAKE_SYSTEM_PROP(DISMISS_BUTTON_LOCATION_RIGHT, 1);*/
 
 // setLocation takes in a dictionary with two keys "latitude" & "longitude"
 // which are both expected to be doubles
-//- (void)setLocation:(id)arg{
-//    ENSURE_SINGLE_ARG(arg, NSDictionary);
-//    CLLocationCoordinate2D location;
-//    location.latitude = [TiUtils doubleValue:@"latitude" properties:arg];
-//    location.longitude = [TiUtils doubleValue:@"longitude" properties:arg];
-//
-//    [Localytics setLocation:location];
-//}
+- (void)setLocation:(id)arg{
+    ENSURE_SINGLE_ARG(arg, NSDictionary);
+    CLLocationCoordinate2D location;
+    location.latitude = [TiUtils doubleValue:@"latitude" properties:arg];
+    location.longitude = [TiUtils doubleValue:@"longitude" properties:arg];
+
+    [Localytics setLocation:location];
+}
 
 #pragma mark - Profile
 
@@ -454,8 +454,8 @@ MAKE_SYSTEM_PROP(DISMISS_BUTTON_LOCATION_RIGHT, 1);*/
 }
 
 - (void)dismissCurrentInAppMessage:(id)args {
-  [Localytics dismissCurrentInAppMessage
-]; }
+  [Localytics dismissCurrentInAppMessage];
+}
 
 #pragma mark - Developer Options
 
