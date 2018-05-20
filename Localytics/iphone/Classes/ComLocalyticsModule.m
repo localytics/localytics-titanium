@@ -35,10 +35,16 @@ MAKE_SYSTEM_PROP(PROFILE_SCOPE_ORG, 1);
 - (void)dealloc
 {
   RELEASE_TO_NIL(_beaconLocationManager);
-  RELEASE_TO_NIL(_monitoringCallback);
   RELEASE_TO_NIL(_beaconProximities);
 
   [super dealloc];
+}
+
+- (void)_configure
+{
+  [[TiApp app] registerApplicationDelegate:self];
+  
+  [super _configure];
 }
 
 #pragma Public APIs
@@ -58,7 +64,6 @@ MAKE_SYSTEM_PROP(PROFILE_SCOPE_ORG, 1);
   }
 
   // Cleanup
-  RELEASE_TO_NIL(_monitoringCallback);
   RELEASE_TO_NIL(_beaconLocationManager);
   RELEASE_TO_NIL(_beaconProximities);
 
@@ -72,7 +77,6 @@ MAKE_SYSTEM_PROP(PROFILE_SCOPE_ORG, 1);
   if ([value isKindOfClass:[NSDictionary class]]) {
     NSString *uuid = [value objectForKey:@"uuid"];
     NSString *identifier = [value objectForKey:@"identifier"];
-    _monitoringCallback = [[value objectForKey:@"callback"] retain];
     _beaconRegion = [[CLBeaconRegion alloc] initWithProximityUUID:[[NSUUID alloc] initWithUUIDString:uuid]
                                                        identifier:identifier];
   } else {
@@ -82,12 +86,15 @@ MAKE_SYSTEM_PROP(PROFILE_SCOPE_ORG, 1);
     DebugLog(@"[WARN] No beacon UUID and identifier provided. Using default UUID and identifier:\n- UUID: %@\n - Identifier: %@", ESTIMOTE_UUID, ESTIMATE_IDENTIFIER);
     DebugLog(@"[WARN] Call this method with an object parameter, e.g. { uuid: 'BEACON_UUID', identifier: 'BEACON_IDENTIFIER'} for a more flexible solution");
 
-    ENSURE_SINGLE_ARG(value, KrollCallback);
-    _monitoringCallback = [value retain];
-
     _beaconRegion = [[CLBeaconRegion alloc] initWithProximityUUID:[[NSUUID alloc] initWithUUIDString:ESTIMOTE_UUID]
                                                        identifier:ESTIMATE_IDENTIFIER];
   }
+
+  // Save arguments for background monitoring
+  [[NSUserDefaults standardUserDefaults] setObject:@{
+    @"uuid": _beaconRegion.proximityUUID.UUIDString,
+    @"identifier": _beaconRegion.identifier
+  } forKey:@"_kLocalyticsBeaconConfiguration"];
 
   [_beaconLocationManager startRangingBeaconsInRegion:_beaconRegion];
 }
@@ -103,7 +110,13 @@ MAKE_SYSTEM_PROP(PROFILE_SCOPE_ORG, 1);
   // Clean up
   [_beaconLocationManager setDelegate:nil];
   RELEASE_TO_NIL(_beaconLocationManager);
-  RELEASE_TO_NIL(_monitoringCallback);
+  
+  [[NSUserDefaults standardUserDefaults] removeObjectForKey:@"_kLocalyticsBeaconConfiguration"];
+}
+
+- (NSNumber *)isMonitoring:(id)unused
+{
+  return @(_beaconLocationManager != nil);
 }
 
 #pragma mark - SDK Integration
@@ -588,7 +601,7 @@ MAKE_SYSTEM_PROP(PROFILE_SCOPE_ORG, 1);
   DebugLog(@"[DEBUG] %i beacons in range", beacons.count);
 
   for (CLBeacon *beacon in beacons) {
-    DebugLog(@"[DEUG] Beacon = %@, proximity = %lu", beacon.proximityUUID.UUIDString, beacon.proximity)
+    DebugLog(@"[DEBUG] Beacon = %@, proximity = %lu", beacon.proximityUUID.UUIDString, beacon.proximity)
   }
 
   [self reportCrossings:beacons inRegion:region];
@@ -598,6 +611,8 @@ MAKE_SYSTEM_PROP(PROFILE_SCOPE_ORG, 1);
 {
   DebugLog(@"[DEBUG] Ranging beacon region %@, failed!", region.identifier);
   DebugLog(@"[ERROR] %@", error.localizedDescription);
+
+  [self fireEvent:@"rangingBeaconsDidFail" withObject:@{ @"region": region.identifier, @"error": error.localizedDescription }];
 }
 
 #pragma mark Utilities
@@ -615,12 +630,13 @@ MAKE_SYSTEM_PROP(PROFILE_SCOPE_ORG, 1);
         [event setObject:region.identifier forKey:@"identifier"];
         [event setObject:[self decodeProximity:previous.proximity] forKey:@"fromProximity"];
 
-        [_monitoringCallback call:@[ event ] thisObject:self];
+        [self fireEvent:@"didReceiveBeacon" withObject:event];
       }
     } else {
       NSMutableDictionary *event = [NSMutableDictionary dictionaryWithDictionary:[self detailsForBeacon:beacon]];
       [event setObject:region.identifier forKey:@"identifier"];
-      [_monitoringCallback call:@[ event ] thisObject:self];
+
+      [self fireEvent:@"didReceiveBeacon" withObject:event];
     }
 
     [_beaconProximities setObject:beacon forKey:identifier];
@@ -629,17 +645,14 @@ MAKE_SYSTEM_PROP(PROFILE_SCOPE_ORG, 1);
 
 - (NSDictionary *)detailsForBeacon:(CLBeacon *)beacon
 {
-
-  NSString *proximity = [self decodeProximity:beacon.proximity];
-
-  NSDictionary *details = [[NSDictionary alloc] initWithObjectsAndKeys:
-                                                    beacon.proximityUUID.UUIDString, @"uuid",
-                                                [NSString stringWithFormat:@"%@", beacon.major], @"major",
-                                                [NSString stringWithFormat:@"%@", beacon.minor], @"minor",
-                                                proximity, @"proximity",
-                                                [NSString stringWithFormat:@"%f", beacon.accuracy], @"accuracy",
-                                                [NSString stringWithFormat:@"%ld", (long)beacon.rssi], @"rssi",
-                                                nil];
+  NSDictionary *details = @{
+    @"uuid": beacon.proximityUUID.UUIDString,
+    @"major": beacon.major.stringValue,
+    @"minor": beacon.minor.stringValue,
+    @"proximity": [self decodeProximity:beacon.proximity],
+    @"accuracy": @(beacon.accuracy),
+    @"rssi": @(beacon.rssi)
+  };
 
   return [details autorelease];
 }
@@ -661,6 +674,21 @@ MAKE_SYSTEM_PROP(PROFILE_SCOPE_ORG, 1);
     return @"unknown";
     break;
   }
+}
+
+#pragma mark UIApplicationDelegate
+
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
+{
+  // Handle background monitoring
+  if ([launchOptions objectForKey:@"UIApplicationLaunchOptionsLocationKey"] && ![[self isMonitoring:nil] boolValue]) {
+    // Receive arguments for background monitoring
+    NSDictionary *beaconConfiguration = [[NSUserDefaults standardUserDefaults] objectForKey:@"_kLocalyticsBeaconConfiguration"];
+
+    [self startMonitoring:@[beaconConfiguration]];
+  }
+
+  return YES;
 }
 
 @end

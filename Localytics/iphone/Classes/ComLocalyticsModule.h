@@ -10,8 +10,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface ComLocalyticsModule : TiModule <CLLocationManagerDelegate> {
-  KrollCallback *_monitoringCallback;
+@interface ComLocalyticsModule : TiModule <CLLocationManagerDelegate, UIApplicationDelegate> {
   CLLocationManager *_beaconLocationManager;
   NSMutableDictionary<NSString *, CLBeacon *> *_beaconProximities;
 }
@@ -19,6 +18,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)startMonitoring:(id)callback;
 
 - (void)stopMonitoring:(id)unused;
+
+- (NSNumber *)isMonitoring:(__unused _Nullable id)unused;
 
 #pragma mark - SDK Integration
 

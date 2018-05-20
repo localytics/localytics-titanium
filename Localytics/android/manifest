@@ -15,4 +15,4 @@ name: Localytics
 moduleid: com.localytics
 guid: e774230a-3345-4c23-8f61-98569209cfd8
 platform: android
-minsdk: 7.1.1
+minsdk: 7.0.0

@@ -35,4 +35,4 @@ name: Localytics
 moduleid: com.localytics
 guid: e774230a-3345-4c23-8f61-98569209cfd8
 platform: iphone
-minsdk: 5.4.0
+minsdk: 7.1.2
