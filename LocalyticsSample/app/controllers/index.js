@@ -15,7 +15,7 @@ $.index.open();
 
 
 // integrate - must happen before calling win.open();
-localytics.autoIntegrate();
+localytics.autoIntegrate('YOUR_API_KEY');
 
 if (Ti.Platform.osname === 'android') {
 	localytics.registerPush();
@@ -93,3 +93,7 @@ localytics.upload();
 console.log('library version ' + localytics.getLibraryVersion());
 console.log('install id ' + localytics.getInstallId());
 console.log('app key ' + localytics.getAppKey());
+
+// Optional: Start ranging for BLE beacons
+// localytics.startMonitoring({ uuid: 'YOUR_BEACON_UUID', identifier: 'YOUR_BEACON_IDENTIFIER' });
+// localytics.stopMonitoring();

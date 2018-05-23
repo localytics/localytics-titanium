@@ -21,6 +21,14 @@ Localytics. For support email [support@localytics.com](mailto:support@localytics
 ## Installing
 * Follow the steps at http://docs.appcelerator.com/titanium/3.0/#!/guide/Using_a_Module to add the localytics module to your project
 
+## GDPR Complience
+
+The Titanium Localytics module includes a couple of privacy-related API's:
+- `pauseDataUploading()`
+- `setCustomerIdWithPrivacyOptedOut(customer_id: String, optedOut: Boolean)`
+- `setPrivacyOptedOut(optedOut: Boolean)`
+
+
 ## Integration
 #### Android
 * Open tiapp.xml in the XML editor mode. Add a `<manifest>` section to the `<android>` section if you have not already done so.
@@ -111,7 +119,7 @@ if (Ti.Platform.osname === 'android') {
 
 ```
 exports.registerPush = function() {
-    if (Ti.Platform.name == "iPhone OS") {
+    if (Ti.Platform.name === "iPhone OS") {
         var localytics = require('com.localytics');
         // Check if the device is running iOS 8 or later
         if (parseInt(Ti.Platform.version.split(".")[0]) >= 8) {
@@ -158,7 +166,9 @@ exports.registerPush = function() {
 
 
 ### Manual
+
 ##### Android
+
 For Android manual integration, you need to add the following to every window that you open:
 ```
 var win = new Window();
@@ -206,6 +216,29 @@ if (Ti.Platform.name == "iPhone OS") {
 }
 localytics.registerPush(); // If you are using push
 ```
+
+##### Beacon Monitoring
+
+The iOS version of this module supports beacon monitoring. In order to hook into the native `UIApplicationDelegate`, you either
+need SDK 7.3.0+ or a custom SDK that includes the [related pull request](https://github.com/appcelerator/titanium_mobile/pull/9526) 
+patched in your SDK. It is required to support background monitoring as well.
+
+Example:
+
+```js
+var localytics = require('com.localytics');
+
+localytics.addEventListener('didReceiveBeacon', function (e) {
+  // Handle beacon
+});
+
+// Start monitoring
+localytics.startMonitoring({ identifier: 'BEACON_ID', uuid: 'BEACON_UUID' });
+
+// Stop monitoring
+localytics.stopMonitoring();
+```
+
 ## License
 Copyright (c) 2015, Char Software, Inc. d/b/a Localytics
 All rights reserved.

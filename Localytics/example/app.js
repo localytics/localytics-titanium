@@ -6,7 +6,7 @@
 var localytics = require('com.localytics');
 
 // integrate - must happen before calling win.open();
-localytics.autoIntegrate();
+localytics.autoIntegrate('YOUR_API_KEY');
 localytics.registerPush();
 
 // developer options

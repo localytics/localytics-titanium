@@ -2,8 +2,8 @@
 # this is your module manifest and used by Titanium
 # during compilation, packaging, distribution, etc.
 #
-version: 3.7.0
-apiversion: 3
+version: 5.1.0
+apiversion: 2
 architectures: armv7 arm64 i386 x86_64
 description: Localytics is a closed-loop app analytics and marketing platform that helps brands acquire, engage, and retain users.
 author: Localytics
@@ -35,4 +35,4 @@ name: Localytics
 moduleid: com.localytics
 guid: e774230a-3345-4c23-8f61-98569209cfd8
 platform: iphone
-minsdk: 3.5.0.GA
+minsdk: 7.1.2
